@@ -1,0 +1,22 @@
+model Payment {
+  id              String        @id @default(uuid())
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("BDT")
+  status          PaymentStatus @default(PENDING)
+  transactionId   String        @unique
+  stripeSessionId String?       @unique
+  paidAt          DateTime?
+  paymentGateway  String?
+  paymentMethod   PaymentMethod?
+  gatewayResponse Json?
+  bookingId       String        @unique
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  isDeleted       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([transactionId, status])
+  @@map("payment")
+}

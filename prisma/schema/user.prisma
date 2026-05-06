@@ -1,0 +1,23 @@
+model User {
+  id            String        @id @default(uuid())
+  name          String
+  email         String        @unique
+  password      String
+  emailVerified Boolean       @default(false)
+  role          Role          @default(STUDENT)
+  image         String?
+  phone         String?
+  status        UserStatus    @default(ACTIVE)
+  isDeleted     Boolean       @default(false)
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tutor         TutorProfile?
+  student       StudentProfile?
+  booking       Booking[]     @relation("StudentBookings")
+  payment       Payment[]
+  review        Review[]
+
+  @@index([email, role])
+  @@map("user")
+}

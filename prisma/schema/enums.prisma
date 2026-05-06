@@ -1,0 +1,32 @@
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  REJECTED  
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  PENDING
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  UNPAID
+}
+
+enum PaymentMethod {
+  STRIPE
+  SSLCOMMERZ
+  AMARPAY
+  CASH
+}

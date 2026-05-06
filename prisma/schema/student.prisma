@@ -1,0 +1,18 @@
+model StudentProfile {
+  id          String    @id @default(uuid())
+  gender      String?
+  dateOfBirth DateTime?
+  address     String?
+  class       String?
+  group       String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  userId      String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("student_profile")
+}
