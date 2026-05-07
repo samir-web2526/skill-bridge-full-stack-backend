@@ -102,10 +102,17 @@ const getMyProfile = async (userId: string) => {
             }
         },
     });
+
     if (!result) {
         throw new AppError(status.NOT_FOUND, "Tutor profile not found");
     }
-    return result;
+
+    return {
+        ...result,
+        availability: result.isAvailable,
+        totalBookings: result._count.booking,
+        totalReviews: result._count.review,
+    };
 };
 
 const getStats = async () => {

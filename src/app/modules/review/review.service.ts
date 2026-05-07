@@ -72,7 +72,11 @@ const getReviews = async (paginationOptions: any) => {
     orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
     include: {
       user: true,
-      tutor: true,
+      tutor: {
+        include: {
+          user: true
+        }
+      },
     },
   });
 
@@ -107,8 +111,10 @@ const getReviewByTutorId = async (tutorId: string, paginationOptions: any) => {
     where: { tutorId: tutor.id },
     include: {
       user: true,
-      tutor: true,
-    },
+      tutor: {
+        include: { user: true }
+      }
+    }
   });
   const total = await prisma.review.count();
 
