@@ -143,6 +143,22 @@ const deleteTutor = async (id: string) => {
         throw new AppError(status.BAD_REQUEST, "Tutor is already deleted");
     }
 
+    const activeBookings = await prisma.booking.count({
+        where: {
+            tutorId: id,
+            status: {
+                in: ["PENDING", "CONFIRMED"]
+            },
+        },
+    });
+
+    if (activeBookings > 0) {
+        throw new AppError(
+            status.BAD_REQUEST,
+            "Tutor has active bookings. Cannot delete"
+        );
+    }
+
     const result = await prisma.tutorProfile.update({
         where: { id },
         data: {
@@ -186,7 +202,27 @@ const getDeletedTutors = async () => {
     return result;
 };
 
-const updateTutorStatus = async (id: string, payload: { status: UserStatus }) => {
+// const updateTutorStatus = async (id: string, payload: { status: UserStatus }) => {
+//     const tutor = await prisma.tutorProfile.findUnique({
+//         where: { id },
+//         select: { userId: true }
+//     });
+
+//     if (!tutor) {
+//         throw new AppError(status.NOT_FOUND, "Tutor not found");
+//     }
+
+//     const result = await prisma.user.update({
+//         where: { id: tutor.userId },
+//         data: { status: payload.status },
+//     });
+
+//     return result;
+// };
+const updateTutorStatus = async (
+    id: string,
+    payload: { status: UserStatus }
+) => {
     const tutor = await prisma.tutorProfile.findUnique({
         where: { id },
         select: { userId: true }
@@ -194,6 +230,22 @@ const updateTutorStatus = async (id: string, payload: { status: UserStatus }) =>
 
     if (!tutor) {
         throw new AppError(status.NOT_FOUND, "Tutor not found");
+    }
+
+    const activeBookings = await prisma.booking.count({
+        where: {
+            tutorId: id,
+            status: {
+                in: ["PENDING", "CONFIRMED"]
+            },
+        },
+    });
+
+    if (activeBookings > 0 && payload.status !== "ACTIVE") {
+        throw new AppError(
+            status.BAD_REQUEST,
+            "Tutor has active bookings. Status cannot be changed to Pending or Banned"
+        );
     }
 
     const result = await prisma.user.update({

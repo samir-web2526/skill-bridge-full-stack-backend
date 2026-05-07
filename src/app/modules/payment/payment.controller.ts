@@ -29,6 +29,7 @@ const handleStripeWebhook = async (req: Request, res: Response) => {
     console.log("=== Webhook Success ===");
     res.json(result);
   } catch (err: any) {
+    console.error("❌ Webhook verify failed:", err.message);
     console.error("=== Webhook Error ===", err.message);
     res.status(400).json({ error: err.message });
   }

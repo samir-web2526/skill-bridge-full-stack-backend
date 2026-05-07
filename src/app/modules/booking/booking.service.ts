@@ -4,27 +4,161 @@ import status from "http-status";
 import { IBookingPayload } from "./booking.interface";
 import { BookingStatus, Role } from "../../../generated/enums";
 
+// const createBooking = async (payload: IBookingPayload, userId: string) => {
+//   const { tutorId, date, startTime, endTime } = payload;
+
+//   // 1. validation
+//   if (!tutorId || !date || !startTime || !endTime) {
+//     throw new AppError(400, "Missing required booking fields");
+//   }
+
+//   const bookingDate = new Date(date);
+//   bookingDate.setHours(0, 0, 0, 0);
+
+//   const startDateTime = new Date(`${date}T${startTime}`);
+//   const endDateTime = new Date(`${date}T${endTime}`);
+
+//   if (startDateTime >= endDateTime) {
+//     throw new AppError(400, "Invalid time range");
+//   }
+
+//   // 2. time limit check
+//   const startHour = startDateTime.getHours();
+//   const endHour = endDateTime.getHours();
+
+//   if (startHour < 6 || endHour > 23) {
+//     throw new AppError(400, "Booking allowed between 6 AM - 11 PM");
+//   }
+
+//   // 3. tutor check
+//   const tutor = await prisma.tutorProfile.findUnique({
+//     where: { id: tutorId },
+//     select: {
+//       userId: true,
+//       availableFrom: true,
+//       availableTo: true,
+//     },
+//   });
+
+//   if (!tutor) throw new AppError(404, "Tutor not found");
+
+//   if (!tutor.availableFrom || !tutor.availableTo) {
+//     throw new AppError(400, "Tutor working hours not set");
+//   }
+
+//   // 4. tutor status check
+//   const tutorUser = await prisma.user.findUnique({
+//     where: { id: tutor.userId },
+//     select: { status: true },
+//   });
+
+//   if (!tutorUser) throw new AppError(404, "Tutor user not found");
+
+//   if (tutorUser.status !== "ACTIVE") {
+//     throw new AppError(400, "Tutor is not active");
+//   }
+
+//   // 5. tutor working hour validation
+//   const tutorStart = new Date(`${date}T${tutor.availableFrom}`);
+//   const tutorEnd = new Date(`${date}T${tutor.availableTo}`);
+
+//   if (startDateTime < tutorStart || endDateTime > tutorEnd) {
+//     throw new AppError(400, "Time is outside tutor working hours");
+//   }
+
+//   // =========================================
+//   // 🔥 FIX 1: SAME STUDENT ACTIVE BOOKING BLOCK
+//   // =========================================
+//   const studentActiveBooking = await prisma.booking.findFirst({
+//     where: {
+//       userId,
+//       status: {
+//         in: ["PENDING", "CONFIRMED"],
+//       },
+//       isDeleted: false,
+//     },
+//   });
+
+//   if (studentActiveBooking) {
+//     throw new AppError(
+//       400,
+//       "You already have an active booking. Please complete or cancel it first."
+//     );
+//   }
+
+//   const existingBooking = await prisma.booking.findFirst({
+//     where: {
+//       tutorId,
+//       userId,
+//       status: {
+//         in: ["PENDING", "CONFIRMED"]
+//       },
+//       isDeleted: false,
+//     },
+//   });
+
+//   if (existingBooking) {
+//     throw new AppError(400, "You already have an active booking with this tutor");
+//   }
+
+//   // =========================================
+//   // 🔥 FIX 2: TIME CONFLICT CHECK (CORRECT)
+//   // =========================================
+//   const conflict = await prisma.booking.findFirst({
+//     where: {
+//       AND: [
+//         {
+//           tutorId,
+//           isDeleted: false,
+//           status: {
+//             in: ["PENDING", "CONFIRMED"],
+//           },
+//         },
+//         {
+//           startTime: { lt: endDateTime },
+//         },
+//         {
+//           endTime: { gt: startDateTime },
+//         },
+//       ],
+//     },
+//   });
+//   if (conflict) {
+//     throw new AppError(409, "Time slot already booked");
+//   }
+
+//   // 6. create booking
+//   return prisma.booking.create({
+//     data: {
+//       tutorId,
+//       userId,
+//       date: bookingDate,
+//       startTime: startDateTime,
+//       endTime: endDateTime,
+//       status: "PENDING",
+//     },
+//   });
+// };
+
 const createBooking = async (payload: IBookingPayload, userId: string) => {
   const { tutorId, date, startTime, endTime } = payload;
 
-  console.log("BOOKING PAYLOAD:", payload);
-
-  // 1. convert to date (normalize)
-  const bookingDate = new Date(date);
-  bookingDate.setHours(0, 0, 0, 0);
-
-  const startDateTime = new Date(`${date}T${startTime}:00`);
-  const endDateTime = new Date(`${date}T${endTime}:00`);
-
-  // 2. basic validation
+  // 1. validation
   if (!tutorId || !date || !startTime || !endTime) {
     throw new AppError(400, "Missing required booking fields");
   }
+
+  const bookingDate = new Date(date);
+  bookingDate.setHours(0, 0, 0, 0);
+
+  const startDateTime = new Date(`${date}T${startTime}`);
+  const endDateTime = new Date(`${date}T${endTime}`);
 
   if (startDateTime >= endDateTime) {
     throw new AppError(400, "Invalid time range");
   }
 
+  // 2. time limit check
   const startHour = startDateTime.getHours();
   const endHour = endDateTime.getHours();
 
@@ -32,72 +166,76 @@ const createBooking = async (payload: IBookingPayload, userId: string) => {
     throw new AppError(400, "Booking allowed between 6 AM - 11 PM");
   }
 
-
-  // 4. OPTIONAL (BEST PRACTICE) → check tutor working hours
+  // 3. tutor check
   const tutor = await prisma.tutorProfile.findUnique({
     where: { id: tutorId },
     select: {
-       userId: true,
+      userId: true,
       availableFrom: true,
       availableTo: true,
     },
   });
 
-  if (!tutor) {
-  throw new AppError(404, "Tutor not found");
-}
+  if (!tutor) throw new AppError(404, "Tutor not found");
 
-if (!tutor.userId) {
-  throw new AppError(404, "Tutor userId not found");
-}
   if (!tutor.availableFrom || !tutor.availableTo) {
-  throw new AppError(400, "Tutor working hours not set");
-}
+    throw new AppError(400, "Tutor working hours not set");
+  }
 
-
+  // 4. tutor status check
   const tutorUser = await prisma.user.findUnique({
-  where: { id: tutor?.userId },
-  select: {
-    status: true,
-  },
-});
+    where: { id: tutor.userId },
+    select: { status: true },
+  });
 
-if (!tutorUser) {
-  throw new AppError(404, "Tutor user not found");
-}
+  if (!tutorUser) throw new AppError(404, "Tutor user not found");
 
-if (tutorUser.status === "PENDING") {
-  throw new AppError(
-    400,
-    "Tutor is not approved yet"
-  );
-}
+  if (tutorUser.status !== "ACTIVE") {
+    throw new AppError(400, "Tutor is not active");
+  }
 
-  const tutorStart = new Date(`${date}T${tutor.availableFrom}:00`);
-  const tutorEnd = new Date(`${date}T${tutor.availableTo}:00`);
-
-  if (tutorStart >= tutorEnd) {
-  throw new AppError(400, "Invalid tutor working hours configuration");
-}
+  // 5. tutor working hour validation
+  const tutorStart = new Date(`${date}T${tutor.availableFrom}`);
+  const tutorEnd = new Date(`${date}T${tutor.availableTo}`);
 
   if (startDateTime < tutorStart || endDateTime > tutorEnd) {
+    throw new AppError(400, "Time is outside tutor working hours");
+  }
+
+  // =========================================
+  // 6. SAME STUDENT, SAME DATE - MULTIPLE BOOKING BLOCK
+  // =========================================
+  const studentSameDateBooking = await prisma.booking.findFirst({
+    where: {
+      userId,
+      date: bookingDate,
+      status: {
+        in: [BookingStatus.PENDING, BookingStatus.CONFIRMED],
+      },
+      isDeleted: false,
+    },
+  });
+
+  if (studentSameDateBooking) {
     throw new AppError(
       400,
-      "Time is outside tutor working hours"
+      "You already have a booking on this date. Please complete or cancel it first."
     );
   }
-  
 
-  // 5. conflict check (IMPORTANT FIXED)
+  // =========================================
+  // 7. TIME CONFLICT CHECK (TUTOR SIDE)
+  // =========================================
   const conflict = await prisma.booking.findFirst({
     where: {
-      tutorId,
-      isDeleted: false,
-      date: {
-        gte: bookingDate,
-        lt: new Date(bookingDate.getTime() + 86400000),
-      },
       AND: [
+        {
+          tutorId,
+          isDeleted: false,
+          status: {
+            in: [BookingStatus.PENDING, BookingStatus.CONFIRMED],
+          },
+        },
         { startTime: { lt: endDateTime } },
         { endTime: { gt: startDateTime } },
       ],
@@ -108,7 +246,7 @@ if (tutorUser.status === "PENDING") {
     throw new AppError(409, "Time slot already booked");
   }
 
-  // 6. create booking
+  // 8. create booking
   return prisma.booking.create({
     data: {
       tutorId,
@@ -120,7 +258,6 @@ if (tutorUser.status === "PENDING") {
     },
   });
 };
-
 const getBooking = async (paginationOptions: any, userId: string, role: Role) => {
   const { page, limit, skip, sortBy, sortOrder } = paginationOptions;
 
@@ -152,10 +289,13 @@ const getBooking = async (paginationOptions: any, userId: string, role: Role) =>
     include: {
       user: true,
       tutor: {
-        include:{
-          user:true
+        include: {
+          user: true,
+          category: true,
         }
       },
+      payment: true,
+      review: true,
     },
     skip,
     take: limit,
@@ -187,8 +327,11 @@ const getBookingById = async (userId: string, bookingId: string, role: Role) => 
       tutor: {
         include: {
           user: true,
-        },
+          category: true,
+        }
       },
+      payment: true,
+      review: true,
     },
   });
 
@@ -232,9 +375,45 @@ const updateBooking = async (payload: any, userId: string, bookingId: string) =>
   return result;
 };
 
+// const cancelBooking = async (userId: string, bookingId: string) => {
+//   const booking = await prisma.booking.findUnique({
+//     where: { id: bookingId },
+//   });
+
+//   if (!booking) {
+//     throw new AppError(status.NOT_FOUND, "Booking not found");
+//   }
+
+//   if (booking.userId !== userId) {
+//     throw new AppError(
+//       status.FORBIDDEN,
+//       "Only the user who booked can cancel it"
+//     );
+//   }
+
+//   if (booking.status !== BookingStatus.PENDING) {
+//     throw new AppError(
+//       status.BAD_REQUEST,
+//       "Only pending bookings can be cancelled"
+//     );
+//   }
+
+//   const result = await prisma.booking.update({
+//     where: { id: bookingId },
+//     data: {
+//       status: BookingStatus.CANCELLED,
+//     },
+//   });
+
+//   return result;
+// };
+
 const cancelBooking = async (userId: string, bookingId: string) => {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
+  const booking = await prisma.booking.findFirst({
+    where: {
+      id: bookingId,
+      isDeleted: false, // 👈 important if you use soft delete
+    },
   });
 
   if (!booking) {
@@ -248,21 +427,19 @@ const cancelBooking = async (userId: string, bookingId: string) => {
     );
   }
 
-  if (booking.status !== BookingStatus.PENDING) {
+  if (booking.status !== "PENDING") {
     throw new AppError(
       status.BAD_REQUEST,
-      "Only pending bookings can be cancelled"
+      `Cannot cancel booking in ${booking.status} state`
     );
   }
 
-  const result = await prisma.booking.update({
+  return prisma.booking.update({
     where: { id: bookingId },
     data: {
-      status: BookingStatus.CANCELLED,
+      status: "CANCELLED",
     },
   });
-
-  return result;
 };
 
 const deletePendingBooking = async (bookingId: string) => {

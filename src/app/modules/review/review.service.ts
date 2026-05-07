@@ -139,7 +139,11 @@ const getMyGivenReview = async (userId: string, paginationOptions: any) => {
     orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
     where: { userId: user.id },
     include: {
-      tutor: true,
+      tutor: {
+        include: {
+          user: true
+        }
+      },
       user: true,
     },
   });
