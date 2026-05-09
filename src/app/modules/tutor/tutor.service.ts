@@ -6,7 +6,7 @@ import status from "http-status";
 
 const getTutors = async (paginationOptions: any, filters: any) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationOptions;
-    const { searchTerm, categoryId, minPrice, maxPrice, category } = filters;
+    const { searchTerm, categoryId, minPrice, maxPrice, category, minRating } = filters;
 
     const andConditions: any[] = [{ isDeleted: false }];
 
@@ -39,6 +39,14 @@ const getTutors = async (paginationOptions: any, filters: any) => {
             hourlyRate: {
                 ...(minPrice !== undefined && { gte: Number(minPrice) }),
                 ...(maxPrice !== undefined && { lte: Number(maxPrice) }),
+            },
+        });
+    }
+
+    if (minRating !== undefined) {
+        andConditions.push({
+            averageRating: {
+                gte: Number(minRating),
             },
         });
     }

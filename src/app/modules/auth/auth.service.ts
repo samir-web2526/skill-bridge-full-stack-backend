@@ -38,6 +38,7 @@ const register = async (payload: IRegisterPayload) => {
                 image: image || null,
                 role: role as Role,
                 status: role === Role.TUTOR ? UserStatus.PENDING : UserStatus.ACTIVE,
+                emailVerified: true,
             },
         });
 
@@ -92,23 +93,23 @@ const register = async (payload: IRegisterPayload) => {
     const { password: _, ...userWithoutPassword } = result;
 
     // Generate and save verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    await prisma.verificationToken.create({
-        data: {
-            identifier: email,
-            token: verificationToken,
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        },
-    });
+    // const verificationToken = crypto.randomBytes(32).toString('hex');
+    // await prisma.verificationToken.create({
+    //     data: {
+    //         identifier: email,
+    //         token: verificationToken,
+    //         expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    //     },
+    // });
 
     // Send verification email
-    try {
-        await sendVerificationEmail(email, verificationToken);
-    } catch (error) {
-        console.error("Failed to send verification email:", error);
-        // We don't throw error here to not block registration, 
-        // but in production you might want a retry logic or tell the user.
-    }
+    // try {
+    //     await sendVerificationEmail(email, verificationToken);
+    // } catch (error) {
+    //     console.error("Failed to send verification email:", error);
+    //     // We don't throw error here to not block registration, 
+    //     // but in production you might want a retry logic or tell the user.
+    // }
 
     return userWithoutPassword;
 };
@@ -137,9 +138,9 @@ const login = async (payload: ILoginPayload) => {
         throw new AppError(status.FORBIDDEN, 'Your account is pending admin approval');
     }
 
-    if (!user.emailVerified) {
-        throw new AppError(status.FORBIDDEN, 'Please verify your email before logging in');
-    }
+    // if (!user.emailVerified) {
+    //     throw new AppError(status.FORBIDDEN, 'Please verify your email before logging in');
+    // }
 
     const isPasswordMatched = await bcrypt.compare(password, user.password!);
 
@@ -213,28 +214,28 @@ const refreshToken = async (token: string) => {
     };
 };
 
-const verifyEmail = async (token: string) => {
-    const verificationToken = await prisma.verificationToken.findUnique({
-        where: { token },
-    });
+// const verifyEmail = async (token: string) => {
+//     const verificationToken = await prisma.verificationToken.findUnique({
+//         where: { token },
+//     });
 
-    if (!verificationToken || verificationToken.expires < new Date()) {
-        throw new AppError(status.BAD_REQUEST, 'Invalid or expired verification token');
-    }
+//     if (!verificationToken || verificationToken.expires < new Date()) {
+//         throw new AppError(status.BAD_REQUEST, 'Invalid or expired verification token');
+//     }
 
-    await prisma.$transaction(async (tx) => {
-        await tx.user.update({
-            where: { email: verificationToken.identifier },
-            data: { emailVerified: true },
-        });
+//     await prisma.$transaction(async (tx) => {
+//         await tx.user.update({
+//             where: { email: verificationToken.identifier },
+//             data: { emailVerified: true },
+//         });
 
-        await tx.verificationToken.delete({
-            where: { token },
-        });
-    });
+//         await tx.verificationToken.delete({
+//             where: { token },
+//         });
+//     });
 
-    return { message: 'Email verified successfully' };
-};
+//     return { message: 'Email verified successfully' };
+// };
 
 const googleLogin = async (idToken: string) => {
     const googleUser = await verifyGoogleToken(idToken);
@@ -312,6 +313,6 @@ export const AuthService = {
     register,
     login,
     refreshToken,
-    verifyEmail,
+    // verifyEmail,
     googleLogin,
 };

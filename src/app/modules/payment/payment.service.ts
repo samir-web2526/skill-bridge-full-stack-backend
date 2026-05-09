@@ -364,12 +364,19 @@ const handleStripeWebhook = async (rawBody: Buffer, signature: string) => {
         break;
       }
 
-      await prisma.payment.update({
-        where: { stripeSessionId: session.id },
-        data: {
-          status: PaymentStatus.PAID,
-          paidAt: new Date(),
-        },
+      await prisma.$transaction(async (tx) => {
+        await tx.payment.update({
+          where: { stripeSessionId: session.id },
+          data: {
+            status: PaymentStatus.PAID,
+            paidAt: new Date(),
+          },
+        });
+
+        await tx.booking.update({
+          where: { id: bookingId },
+          data: { status: BookingStatus.CONFIRMED },
+        });
       });
 
       console.log("✅ Payment success:", bookingId);

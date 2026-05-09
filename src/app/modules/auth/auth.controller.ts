@@ -49,17 +49,17 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const verifyEmail = catchAsync(async (req: Request, res: Response) => {
-    const { token } = req.body;
-    const result = await AuthService.verifyEmail(token);
+// const verifyEmail = catchAsync(async (req: Request, res: Response) => {
+//     const { token } = req.body;
+//     const result = await AuthService.verifyEmail(token);
 
-    sendResponse(res, {
-        statusCode: status.OK,
-        success: true,
-        message: 'Email verified successfully!',
-        data: result,
-    });
-});
+//     sendResponse(res, {
+//         statusCode: status.OK,
+//         success: true,
+//         message: 'Email verified successfully!',
+//         data: result,
+//     });
+// });
 
 const googleLogin = catchAsync(async (req: Request, res: Response) => {
     const { idToken } = req.body;
@@ -86,6 +86,6 @@ export const AuthController = {
     register,
     login,
     refreshToken,
-    verifyEmail,
+    // verifyEmail,
     googleLogin,
 };
