@@ -24,3 +24,12 @@ export type IRegisterPayload = {
     class?: string;
     group?: string;
 }
+
+export type IGoogleLoginPayload = {
+    idToken: string;
+}
+
+export type IVerifyEmailPayload = {
+    token: string;
+}
+

@@ -9,4 +9,14 @@ router.post('/register', validateRequest(AuthValidation.registerValidationSchema
 router.post('/login', validateRequest(AuthValidation.loginValidationSchema), AuthController.login);
 router.post('/refresh-token', validateRequest(AuthValidation.refreshTokenValidationSchema), AuthController.refreshToken);
 
+router.post(
+    '/verify-email',
+    AuthController.verifyEmail
+);
+
+router.post(
+    '/google-login',
+    AuthController.googleLogin
+);
+
 export const authRouter = router;

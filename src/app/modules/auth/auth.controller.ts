@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { envVars } from '../../../config/env';
 import { AuthService } from './auth.service';
 import catchAsync from '../../sharedfile/catchAsync';
 import sendResponse from '../../sharedfile/sendResponse';
@@ -41,10 +42,43 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     const result = await AuthService.refreshToken(refreshToken);
 
     sendResponse(res, {
-        statusCode: Number(status.OK),
+        statusCode: status.OK,
         success: true,
-        message: 'Access token retrieved successfully',
+        message: 'Access token generated successfully!',
         data: result,
+    });
+});
+
+const verifyEmail = catchAsync(async (req: Request, res: Response) => {
+    const { token } = req.body;
+    const result = await AuthService.verifyEmail(token);
+
+    sendResponse(res, {
+        statusCode: status.OK,
+        success: true,
+        message: 'Email verified successfully!',
+        data: result,
+    });
+});
+
+const googleLogin = catchAsync(async (req: Request, res: Response) => {
+    const { idToken } = req.body;
+    const result = await AuthService.googleLogin(idToken);
+
+    const { refreshToken, accessToken } = result;
+
+    res.cookie('refreshToken', refreshToken, {
+        secure: envVars.NODE_ENV === 'production',
+        httpOnly: true,
+    });
+
+    sendResponse(res, {
+        statusCode: status.OK,
+        success: true,
+        message: 'User logged in successfully!',
+        data: {
+            accessToken,
+        },
     });
 });
 
@@ -52,4 +86,6 @@ export const AuthController = {
     register,
     login,
     refreshToken,
+    verifyEmail,
+    googleLogin,
 };

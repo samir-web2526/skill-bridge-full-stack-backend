@@ -8,6 +8,9 @@ import status from 'http-status';
 import { isValidWorkingTime } from '../booking/booking.utils';
 import { Role, UserStatus } from '../../../generated/enums';
 import { Prisma } from '../../../generated/client';
+import crypto from 'crypto';
+import { sendVerificationEmail } from '../../utils/emailSender';
+import { verifyGoogleToken } from '../../utils/googleAuth';
 
 const register = async (payload: IRegisterPayload) => {
     const { email, password, name, phone, image, role, bio, hourlyRate, experience, categoryId, gender, dateOfBirth, address, class: studentClass, group: studentGroup, availableFrom, availableTo } = payload;
@@ -87,6 +90,26 @@ const register = async (payload: IRegisterPayload) => {
     });
 
     const { password: _, ...userWithoutPassword } = result;
+
+    // Generate and save verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.verificationToken.create({
+        data: {
+            identifier: email,
+            token: verificationToken,
+            expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        },
+    });
+
+    // Send verification email
+    try {
+        await sendVerificationEmail(email, verificationToken);
+    } catch (error) {
+        console.error("Failed to send verification email:", error);
+        // We don't throw error here to not block registration, 
+        // but in production you might want a retry logic or tell the user.
+    }
+
     return userWithoutPassword;
 };
 
@@ -114,7 +137,11 @@ const login = async (payload: ILoginPayload) => {
         throw new AppError(status.FORBIDDEN, 'Your account is pending admin approval');
     }
 
-    const isPasswordMatched = await bcrypt.compare(password, user.password);
+    if (!user.emailVerified) {
+        throw new AppError(status.FORBIDDEN, 'Please verify your email before logging in');
+    }
+
+    const isPasswordMatched = await bcrypt.compare(password, user.password!);
 
     if (!isPasswordMatched) {
         throw new AppError(status.FORBIDDEN, 'Invalid password');
@@ -186,8 +213,105 @@ const refreshToken = async (token: string) => {
     };
 };
 
+const verifyEmail = async (token: string) => {
+    const verificationToken = await prisma.verificationToken.findUnique({
+        where: { token },
+    });
+
+    if (!verificationToken || verificationToken.expires < new Date()) {
+        throw new AppError(status.BAD_REQUEST, 'Invalid or expired verification token');
+    }
+
+    await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+            where: { email: verificationToken.identifier },
+            data: { emailVerified: true },
+        });
+
+        await tx.verificationToken.delete({
+            where: { token },
+        });
+    });
+
+    return { message: 'Email verified successfully' };
+};
+
+const googleLogin = async (idToken: string) => {
+    const googleUser = await verifyGoogleToken(idToken);
+
+    let user = await prisma.user.findUnique({
+        where: { email: googleUser.email! },
+    });
+
+    if (!user) {
+        // Create new user if doesn't exist
+        user = await prisma.user.create({
+            data: {
+                email: googleUser.email!,
+                name: googleUser.name!,
+                image: googleUser.picture,
+                googleId: googleUser.googleId,
+                emailVerified: true, // Google emails are already verified
+                role: Role.STUDENT, // Default role
+                status: UserStatus.ACTIVE,
+            },
+        });
+        
+        // Create student profile
+        await prisma.studentProfile.create({
+            data: {
+                userId: user.id,
+            }
+        });
+    } else {
+        // Link googleId if not linked
+        if (!user.googleId) {
+            user = await prisma.user.update({
+                where: { id: user.id },
+                data: { 
+                    googleId: googleUser.googleId,
+                    emailVerified: true 
+                },
+            });
+        }
+    }
+
+    if (user.isDeleted) {
+        throw new AppError(status.FORBIDDEN, 'This account has been deleted');
+    }
+
+    if (user.status === UserStatus.BANNED) {
+        throw new AppError(status.FORBIDDEN, 'Your account has been banned');
+    }
+
+    const jwtPayload = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+    };
+
+    const accessToken = jwtUtils.createToken(
+        jwtPayload,
+        envVars.ACCESS_TOKEN_SECRET as string,
+        { expiresIn: envVars.ACCESS_TOKEN_EXPIRES_IN as any }
+    );
+
+    const refreshToken = jwtUtils.createToken(
+        jwtPayload,
+        envVars.REFRESH_TOKEN_SECRET as string,
+        { expiresIn: envVars.REFRESH_TOKEN_EXPIRES_IN as any }
+    );
+
+    return {
+        accessToken,
+        refreshToken,
+    };
+};
+
 export const AuthService = {
     register,
     login,
     refreshToken,
+    verifyEmail,
+    googleLogin,
 };

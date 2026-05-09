@@ -2,7 +2,8 @@ model User {
   id            String        @id @default(uuid())
   name          String
   email         String        @unique
-  password      String
+  password      String?
+  googleId      String?       @unique
   emailVerified Boolean       @default(false)
   role          Role          @default(STUDENT)
   image         String?
