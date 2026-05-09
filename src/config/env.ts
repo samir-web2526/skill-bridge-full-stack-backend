@@ -49,13 +49,13 @@ const loadEnvVariables = (): EnvConfig => {
         'ADMIN_PHONE',
         'STRIPE_SECRET_KEY',
         'STRIPE_WEBHOOK_SECRET',
-        'EMAIL_HOST',
-        'EMAIL_PORT',
-        'EMAIL_USER',
-        'EMAIL_PASS',
-        'EMAIL_FROM',
-        'GOOGLE_CLIENT_ID',
-        'GOOGLE_CLIENT_SECRET'
+        // 'EMAIL_HOST',
+        // 'EMAIL_PORT',
+        // 'EMAIL_USER',
+        // 'EMAIL_PASS',
+        // 'EMAIL_FROM',
+        // 'GOOGLE_CLIENT_ID',
+        // 'GOOGLE_CLIENT_SECRET'
     ]
 
     requireEnvVariable.forEach((variable) => {
@@ -81,13 +81,13 @@ const loadEnvVariables = (): EnvConfig => {
         ADMIN_PHONE: process.env.ADMIN_PHONE as string,
         STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
         STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
-        EMAIL_HOST: process.env.EMAIL_HOST as string,
-        EMAIL_PORT: parseInt(process.env.EMAIL_PORT as string),
-        EMAIL_USER: process.env.EMAIL_USER as string,
-        EMAIL_PASS: process.env.EMAIL_PASS as string,
-        EMAIL_FROM: process.env.EMAIL_FROM as string,
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string,
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
+        EMAIL_HOST: process.env.EMAIL_HOST as string || '',
+        EMAIL_PORT: parseInt(process.env.EMAIL_PORT as string || '587'),
+        EMAIL_USER: process.env.EMAIL_USER as string || '',
+        EMAIL_PASS: process.env.EMAIL_PASS as string || '',
+        EMAIL_FROM: process.env.EMAIL_FROM as string || '',
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID as string || '',
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string || '',
     }
 }
 
