@@ -36,16 +36,17 @@ const initializePayment = catchAsync(async (req: Request, res: Response) => {
 // };
 
 const handleStripeWebhook = async (req: Request, res: Response) => {
-  const rawBody = (req as any).rawBody || req.body;
-  
+  const sig = req.headers["stripe-signature"] as string;
+  const rawBody = req.body; // express.raw() দিলে এটাই Buffer হবে
+
+  console.log("Is Buffer:", Buffer.isBuffer(rawBody));
+  console.log("Sig:", sig);
+
   try {
-    const result = await PaymentService.handleStripeWebhook(
-      rawBody,
-      req.headers["stripe-signature"] as string
-    );
+    const result = await PaymentService.handleStripeWebhook(rawBody, sig);
     res.json(result);
   } catch (err: any) {
-    console.error("❌ Webhook verify failed:", err.message);
+    console.error("❌ Error:", err.message);
     res.status(400).json({ error: err.message });
   }
 };

@@ -40,17 +40,7 @@ app.use(
 
 app.post(
   "/api/v1/payments/webhook/stripe",
-  (req, res, next) => {
-    let data = "";
-    req.setEncoding("utf8");
-    req.on("data", (chunk) => {
-      data += chunk;
-    });
-    req.on("end", () => {
-      (req as any).rawBody = Buffer.from(data);
-      next();
-    });
-  },
+  express.raw({ type: "*/*" }),
   PaymentController.handleStripeWebhook
 );
 
