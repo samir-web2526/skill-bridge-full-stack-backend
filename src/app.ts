@@ -32,9 +32,25 @@ app.use(
 //   express.raw({ type: "application/json" }),
 //   PaymentController.handleStripeWebhook
 // );
+// app.post(
+//   "/api/v1/payments/webhook/stripe",
+//   express.raw({ type: "application/json" }),
+//   PaymentController.handleStripeWebhook
+// );
+
 app.post(
   "/api/v1/payments/webhook/stripe",
-  express.raw({ type: "application/json" }),
+  (req, res, next) => {
+    let data = "";
+    req.setEncoding("utf8");
+    req.on("data", (chunk) => {
+      data += chunk;
+    });
+    req.on("end", () => {
+      (req as any).rawBody = Buffer.from(data);
+      next();
+    });
+  },
   PaymentController.handleStripeWebhook
 );
 
