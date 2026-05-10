@@ -1,5 +1,5 @@
-import "dotenv/config"; // ensure env variables are loaded
-import app from "./app"; // <-- IMPORTANT: .js after build
+import "dotenv/config";
+import app from "./app";
 import { envVars } from "./config/env";
 import { prisma } from "./lib/prisma";
 

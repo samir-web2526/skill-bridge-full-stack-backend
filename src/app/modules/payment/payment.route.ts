@@ -6,7 +6,6 @@ import { checkAuth } from '../../middlewares/checkAuth';
 
 const router = Router();
 
-// Initialize payment (Authenticated — creates Stripe Checkout Session)
 router.post(
   '/init',
   checkAuth('STUDENT'),
@@ -14,12 +13,6 @@ router.post(
   PaymentController.initializePayment
 );
 
-// Stripe Webhook (Public — raw body handled in app.ts)
-// router.post('/webhook/stripe', PaymentController.handleStripeWebhook);
-
-// Get payment by booking ID (Authenticated)
-
-// Get all payments (Admin only)
 router.get(
   '/',
   checkAuth('ADMIN'),

@@ -15,10 +15,9 @@ export const validateRequest = (schema: z.ZodTypeAny) => {
         return next(result.error);
       }
 
-      // Using 'any' to avoid potential type augmentation issues with Express Request
       const data = result.data as any;
       const request = req as any;
-      
+
       if (data.body !== undefined) request.body = data.body;
       if (data.query !== undefined) request.query = data.query;
       if (data.params !== undefined) request.params = data.params;

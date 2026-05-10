@@ -16,28 +16,9 @@ const initializePayment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// const handleStripeWebhook = async (req: Request, res: Response) => {
-//   console.log("=== Webhook Hit ===");
-//   console.log("Is Buffer:", Buffer.isBuffer(req.body));
-//   console.log("Signature:", req.headers["stripe-signature"]);
-
-//   try {
-//     const result = await PaymentService.handleStripeWebhook(
-//       req.body,
-//       req.headers["stripe-signature"] as string
-//     );
-//     console.log("=== Webhook Success ===");
-//     res.json(result);
-//   } catch (err: any) {
-//     console.error("❌ Webhook verify failed:", err.message);
-//     console.error("=== Webhook Error ===", err.message);
-//     res.status(400).json({ error: err.message });
-//   }
-// };
-
 const handleStripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
-  const rawBody = req.body; // express.raw() দিলে এটাই Buffer হবে
+  const rawBody = req.body;
 
   console.log("Is Buffer:", Buffer.isBuffer(rawBody));
   console.log("Sig:", sig);
@@ -46,7 +27,7 @@ const handleStripeWebhook = async (req: Request, res: Response) => {
     const result = await PaymentService.handleStripeWebhook(rawBody, sig);
     res.json(result);
   } catch (err: any) {
-    console.error("❌ Error:", err.message);
+    console.error("Error:", err.message);
     res.status(400).json({ error: err.message });
   }
 };

@@ -4,7 +4,6 @@ import AppError from "../../errorHelpers/AppError";
 
 const getStudents = async (user: any) => {
 
-    // ADMIN → all students
     if (user.role === "ADMIN") {
         return await prisma.studentProfile.findMany({
             where: {
@@ -16,7 +15,6 @@ const getStudents = async (user: any) => {
         });
     }
 
-    // TUTOR → only own students
     if (user.role === "TUTOR") {
 
         const tutor = await prisma.tutorProfile.findUnique({
@@ -67,23 +65,6 @@ const getMyProfile = async (user: any) => {
     return result;
 };
 
-// const updateMyProfile = async (user: any, payload: any) => {
-//     if (!user || !user.id) {
-//         throw new Error("Unauthorized user");
-//     }
-
-//     const result = await prisma.studentProfile.update({
-//         where: {
-//             userId: user.id,
-//             isDeleted: false,
-//         },
-//         data: payload,
-//     });
-
-//     return result;
-// };
-
-
 const updateMyProfile = async (user: any, payload: any) => {
     if (!user?.id) {
         throw new Error("Unauthorized user");
@@ -101,7 +82,6 @@ const updateMyProfile = async (user: any, payload: any) => {
             },
         });
 
-        // 2. StudentProfile update (student specific fields)
         const updatedStudent = await tx.studentProfile.update({
             where: {
                 userId: user.id,

@@ -14,7 +14,7 @@ interface EnvConfig {
     ACCESS_TOKEN_EXPIRES_IN: number;
     REFRESH_TOKEN_SECRET: string;
     REFRESH_TOKEN_EXPIRES_IN: number;
-    BCRYPT_SALT_ROUNDS:number;
+    BCRYPT_SALT_ROUNDS: number;
     ADMIN_EMAIL: string;
     ADMIN_PASSWORD: string;
     ADMIN_NAME: string;
@@ -60,7 +60,6 @@ const loadEnvVariables = (): EnvConfig => {
 
     requireEnvVariable.forEach((variable) => {
         if (!process.env[variable]) {
-            // throw new Error(`Environment variable ${variable} is required but not set in .env file.`);
             throw new AppError(status.INTERNAL_SERVER_ERROR, `Environment variable ${variable} is required but not set in .env file.`);
         }
     })

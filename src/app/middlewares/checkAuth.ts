@@ -1,5 +1,3 @@
-
-
 import { NextFunction, Request, Response } from "express";
 import { jwtUtils } from "../utils/jwt";
 import { envVars } from "../../config/env";
@@ -12,14 +10,12 @@ export const checkAuth =
   (...authRoles: string[]) =>
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        // ======================= VERIFY TOKEN =======================
         const token = req.headers.authorization?.split(" ")[1];
 
         if (!token) {
           throw new AppError(status.UNAUTHORIZED, "Unauthorized! No token provided.");
         }
 
-        // ======================= VERIFY COOKIE =======================
         const verifyResponse = jwtUtils.verifyToken(
           token,
           envVars.ACCESS_TOKEN_SECRET
@@ -31,7 +27,6 @@ export const checkAuth =
 
         const { id, name, email, role } = verifyResponse.data!;
 
-        // ======================= VERIFY USER ACCESS AND OTHERS =======================
         const user = await prisma.user.findUnique({
           where: { id, isDeleted: false },
         });
@@ -44,12 +39,10 @@ export const checkAuth =
           throw new AppError(status.FORBIDDEN, "User is blocked.");
         }
 
-        // ======================= VERIFY USER ROLE =======================
         if (authRoles.length && !authRoles.includes(role)) {
           throw new AppError(status.FORBIDDEN, "Forbidden! You don't have permission.");
         }
 
-        // ======================= SET USER IN REQUEST =======================
         req.user = { id, name, email, role };
 
         next();

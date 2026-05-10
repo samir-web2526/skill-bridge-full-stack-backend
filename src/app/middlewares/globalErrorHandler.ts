@@ -8,8 +8,6 @@ import { handleZodError } from "../errorHelpers/handleZodError";
 import { TErrorResponse, TErrorSources } from "../interfaces/error.interface";
 import { envVars } from "../../config/env";
 
-
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
     if (envVars.NODE_ENV === 'development') {
@@ -50,7 +48,6 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
             }
         ]
     }
-
 
     const errorResponse: TErrorResponse = {
         success: false,

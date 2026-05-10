@@ -4,7 +4,7 @@ import { envVars } from '../config/env';
 
 export async function seedAdmin() {
   try {
-    // Check if admin already exists
+
     const existingAdmin = await prisma.user.findFirst({
       where: { role: 'ADMIN' },
     });
@@ -14,10 +14,8 @@ export async function seedAdmin() {
       return;
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(envVars.ADMIN_PASSWORD, 10);
 
-    // Create admin user
     const admin = await prisma.user.create({
       data: {
         name: envVars.ADMIN_NAME,
@@ -38,7 +36,6 @@ export async function seedAdmin() {
   }
 }
 
-// Execute the seed function
 seedAdmin().catch(() => {
   process.exit(1);
 });

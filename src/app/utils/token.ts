@@ -4,9 +4,6 @@ import { CookieUtils } from "./cookie";
 import { jwtUtils } from "./jwt";
 import { envVars } from "../../config/env";
 
-
-
-//Creating access token
 const getAccessToken = (payload: JwtPayload) => {
     const options: SignOptions = {
         expiresIn: envVars.ACCESS_TOKEN_EXPIRES_IN
@@ -38,10 +35,7 @@ const setAccessTokenCookie = (res: Response, token: string) => {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
-        // secure: true,
-        // sameSite: "none",
         path: '/',
-        //1 day
         maxAge: 60 * 60 * 24 * 1000,
     });
 }
@@ -51,10 +45,7 @@ const setRefreshTokenCookie = (res: Response, token: string) => {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
-        // secure: true,
-        // sameSite: "none",
         path: '/',
-        //7d
         maxAge: 60 * 60 * 24 * 1000 * 7,
     });
 }
@@ -64,10 +55,7 @@ const setBetterAuthSessionCookie = (res: Response, token: string) => {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
-        // secure: true,
-        // sameSite: "none",
         path: '/',
-        //1 day
         maxAge: 60 * 60 * 24 * 1000,
     });
 }

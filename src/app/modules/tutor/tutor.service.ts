@@ -217,23 +217,6 @@ const getDeletedTutors = async () => {
     return result;
 };
 
-// const updateTutorStatus = async (id: string, payload: { status: UserStatus }) => {
-//     const tutor = await prisma.tutorProfile.findUnique({
-//         where: { id },
-//         select: { userId: true }
-//     });
-
-//     if (!tutor) {
-//         throw new AppError(status.NOT_FOUND, "Tutor not found");
-//     }
-
-//     const result = await prisma.user.update({
-//         where: { id: tutor.userId },
-//         data: { status: payload.status },
-//     });
-
-//     return result;
-// };
 const updateTutorStatus = async (
     id: string,
     payload: { status: UserStatus }

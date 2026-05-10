@@ -8,7 +8,7 @@ import status from 'http-status';
 import { isValidWorkingTime } from '../booking/booking.utils';
 import { Role, UserStatus } from '../../../generated/enums';
 import { Prisma } from '../../../generated/client';
-import crypto from 'crypto';
+// import crypto from 'crypto';
 import { sendVerificationEmail } from '../../utils/emailSender';
 import { verifyGoogleToken } from '../../utils/googleAuth';
 
@@ -245,33 +245,32 @@ const googleLogin = async (idToken: string) => {
     });
 
     if (!user) {
-        // Create new user if doesn't exist
+
         user = await prisma.user.create({
             data: {
                 email: googleUser.email!,
                 name: googleUser.name!,
                 image: googleUser.picture,
                 googleId: googleUser.googleId,
-                emailVerified: true, // Google emails are already verified
-                role: Role.STUDENT, // Default role
+                emailVerified: true,
+                role: Role.STUDENT,
                 status: UserStatus.ACTIVE,
             },
         });
-        
-        // Create student profile
+
         await prisma.studentProfile.create({
             data: {
                 userId: user.id,
             }
         });
     } else {
-        // Link googleId if not linked
+
         if (!user.googleId) {
             user = await prisma.user.update({
                 where: { id: user.id },
-                data: { 
+                data: {
                     googleId: googleUser.googleId,
-                    emailVerified: true 
+                    emailVerified: true
                 },
             });
         }
