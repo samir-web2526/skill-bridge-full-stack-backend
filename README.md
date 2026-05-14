@@ -215,7 +215,7 @@ skill-bridge-full-stack-backend/
 
 ## Live API
 
-🔗 Base URL: https://skill-bridge-full-stack-backend.vercel.app/api/v1/
+🔗 Base URL: https://skill-bridge-full-stack-backend.vercel.app/
 
 ---
 
